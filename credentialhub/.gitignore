@@ -1,0 +1,18 @@
+# Node
+frontend/node_modules
+frontend/.next
+frontend/out
+
+# Python
+backend/.venv
+backend/__pycache__
+backend/**/*.pyc
+
+# Environment
+*.env
+!*.env.example
+backend/.env
+frontend/.env
+
+# Docker
+docker-data
