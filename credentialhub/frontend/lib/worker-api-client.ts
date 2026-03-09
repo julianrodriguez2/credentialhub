@@ -73,6 +73,31 @@ export type ReferencePayload = {
   relationship: string;
 };
 
+export type CredentialType = "license" | "certificate" | "training";
+export type CredentialStatus = "valid" | "expiring" | "expired";
+
+export type Credential = {
+  id: string;
+  worker_id: number;
+  credential_name: string;
+  credential_type: CredentialType;
+  issuing_organization: string;
+  issue_date: string;
+  expiration_date: string | null;
+  document_url: string;
+  created_at: string;
+  status: CredentialStatus;
+};
+
+export type UploadCredentialPayload = {
+  credential_name: string;
+  credential_type: CredentialType;
+  issuing_organization: string;
+  issue_date: string;
+  expiration_date: string | null;
+  file: File;
+};
+
 async function parseResponse<T>(response: Response): Promise<T> {
   const data = await response.json().catch(() => ({}));
 
@@ -179,4 +204,72 @@ export async function deleteReference(id: number): Promise<{ success: true }> {
     method: "DELETE",
   });
   return parseResponse<{ success: true }>(response);
+}
+
+export async function getCredentials(): Promise<Credential[]> {
+  const response = await fetch("/api/worker/credentials/", { cache: "no-store" });
+  return parseResponse<Credential[]>(response);
+}
+
+export async function getCredential(id: string): Promise<Credential> {
+  const response = await fetch(`/api/worker/credentials/${id}`, {
+    cache: "no-store",
+  });
+  return parseResponse<Credential>(response);
+}
+
+export async function deleteCredential(id: string): Promise<{ success: true }> {
+  const response = await fetch(`/api/worker/credentials/${id}`, {
+    method: "DELETE",
+  });
+  return parseResponse<{ success: true }>(response);
+}
+
+export function uploadCredential(
+  payload: UploadCredentialPayload,
+  onProgress?: (progress: number) => void,
+): Promise<Credential> {
+  const formData = new FormData();
+  formData.append("credential_name", payload.credential_name);
+  formData.append("credential_type", payload.credential_type);
+  formData.append("issuing_organization", payload.issuing_organization);
+  formData.append("issue_date", payload.issue_date);
+  if (payload.expiration_date) {
+    formData.append("expiration_date", payload.expiration_date);
+  }
+  formData.append("file", payload.file);
+
+  return new Promise<Credential>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/worker/credentials/upload");
+
+    xhr.upload.onprogress = (event) => {
+      if (!onProgress || !event.lengthComputable) {
+        return;
+      }
+      const percent = Math.round((event.loaded / event.total) * 100);
+      onProgress(percent);
+    };
+
+    xhr.onload = () => {
+      let data: unknown = {};
+      try {
+        data = JSON.parse(xhr.responseText || "{}");
+      } catch {
+        data = {};
+      }
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(data as Credential);
+        return;
+      }
+      const detail =
+        typeof data === "object" && data !== null && "detail" in data
+          ? (data as { detail?: unknown }).detail
+          : null;
+      reject(new Error(typeof detail === "string" ? detail : "Upload failed."));
+    };
+
+    xhr.onerror = () => reject(new Error("Upload failed."));
+    xhr.send(formData);
+  });
 }

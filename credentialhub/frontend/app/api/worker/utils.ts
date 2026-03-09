@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 import { TOKEN_COOKIE_NAME } from "@/lib/constants";
 
-const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:8000";
+export const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:8000";
 
 export function unauthorizedResponse() {
   return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
@@ -31,6 +31,31 @@ export async function forwardJsonRequest(
 
   const data = await response.json().catch(() => ({}));
 
+  if (!response.ok) {
+    return NextResponse.json(
+      { detail: data.detail ?? "Request failed." },
+      { status: response.status },
+    );
+  }
+
+  return NextResponse.json(data);
+}
+
+export async function forwardMultipartRequest(
+  path: string,
+  token: string,
+  formData: FormData,
+) {
+  const response = await fetch(`${BACKEND_URL}${path}`, {
+    method: "POST",
+    cache: "no-store",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  const data = await response.json().catch(() => ({}));
   if (!response.ok) {
     return NextResponse.json(
       { detail: data.detail ?? "Request failed." },

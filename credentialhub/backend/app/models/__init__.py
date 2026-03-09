@@ -1,3 +1,4 @@
+from app.models.credential import Credential, CredentialType
 from app.models.competency import Competency
 from app.models.employer_profile import EmployerProfile
 from app.models.reference import Reference
@@ -13,4 +14,6 @@ __all__ = [
     "WorkExperience",
     "Competency",
     "Reference",
+    "Credential",
+    "CredentialType",
 ]

@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     STORAGE_PROVIDER: str = "s3"
     S3_ENDPOINT_URL: str | None = None
     S3_REGION: str = "us-east-1"
+    S3_ACCESS_KEY: str | None = None
+    S3_SECRET_KEY: str | None = None
     S3_ACCESS_KEY_ID: str | None = None
     S3_SECRET_ACCESS_KEY: str | None = None
     S3_BUCKET: str = "credentialhub-documents"

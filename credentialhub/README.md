@@ -84,8 +84,8 @@ docker-compose up --build
 | `STORAGE_PROVIDER` | Storage implementation selector (`s3` or fallback) |
 | `S3_ENDPOINT_URL` | S3-compatible endpoint |
 | `S3_REGION` | S3 region |
-| `S3_ACCESS_KEY_ID` | S3 access key |
-| `S3_SECRET_ACCESS_KEY` | S3 secret key |
+| `S3_ACCESS_KEY` | S3 access key |
+| `S3_SECRET_KEY` | S3 secret key |
 | `S3_BUCKET` | Target bucket for documents |
 
 ### Frontend (`frontend/.env`)
@@ -101,12 +101,15 @@ docker-compose up --build
 ### Backend
 
 - `app/main.py`: FastAPI app bootstrap, CORS, startup table creation, router mounting
-- `app/models/`: SQLAlchemy models (`User`, `WorkerProfile`, `EmployerProfile`)
+- `app/models/`: SQLAlchemy models (`User`, `WorkerProfile`, `EmployerProfile`, `Credential`, etc.)
 - `app/schemas/`: Pydantic request/response schemas
 - `app/services/auth_service.py`: registration, login validation, token issuance
 - `app/api/v1/auth.py`: auth endpoints
 - `app/api/v1/worker.py`: worker profile, experience, competencies, references endpoints
+- `app/api/v1/worker_credentials.py`: worker credential upload/list/detail/delete endpoints
 - `app/services/worker_service.py`: worker profile and CRUD business logic
+- `app/services/storage_service.py`: S3/MinIO file upload and deletion service
+- `app/services/credential_status_service.py`: computed status (`valid`, `expiring`, `expired`)
 - `app/api/deps.py`: JWT authentication and RBAC dependencies
 - `app/services/storage.py`: S3-compatible storage abstraction
 
@@ -121,6 +124,7 @@ docker-compose up --build
   - `/dashboard/worker/experience`
   - `/dashboard/worker/competencies`
   - `/dashboard/worker/references`
+  - `/dashboard/worker/credentials`
 - Role-based redirects keep employers/admins out of worker routes
 - React Query drives mutation state for login/register forms
 - Zustand stores lightweight client auth state
@@ -143,6 +147,10 @@ docker-compose up --build
 - `POST /api/worker/references`
 - `GET /api/worker/references`
 - `DELETE /api/worker/references?id=<id>`
+- `POST /api/worker/credentials/upload`
+- `GET /api/worker/credentials`
+- `GET /api/worker/credentials/{id}`
+- `DELETE /api/worker/credentials/{id}`
 
 ## Notes
 

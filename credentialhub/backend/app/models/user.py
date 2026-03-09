@@ -8,6 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 
 if TYPE_CHECKING:
+    from app.models.credential import Credential
     from app.models.competency import Competency
     from app.models.employer_profile import EmployerProfile
     from app.models.reference import Reference
@@ -49,5 +50,8 @@ class User(Base):
         back_populates="worker", cascade="all, delete-orphan"
     )
     references: Mapped[list["Reference"]] = relationship(
+        back_populates="worker", cascade="all, delete-orphan"
+    )
+    credentials: Mapped[list["Credential"]] = relationship(
         back_populates="worker", cascade="all, delete-orphan"
     )

@@ -21,6 +21,7 @@ const navItemsByRole: Record<Role, Array<{ href: string; label: string }>> = {
     { href: "/dashboard/worker/experience", label: "Experience" },
     { href: "/dashboard/worker/competencies", label: "Competencies" },
     { href: "/dashboard/worker/references", label: "References" },
+    { href: "/dashboard/worker/credentials", label: "Credentials" },
   ],
   employer: [{ href: "/dashboard/employer", label: "Dashboard" }],
   admin: [{ href: "/dashboard/admin", label: "Dashboard" }],
