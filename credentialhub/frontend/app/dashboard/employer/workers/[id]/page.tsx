@@ -146,6 +146,7 @@ export default function EmployerWorkerProfilePage() {
           <TabsTrigger value="competencies">Competencies</TabsTrigger>
           <TabsTrigger value="credentials">Credentials</TabsTrigger>
           <TabsTrigger value="references">References</TabsTrigger>
+          <TabsTrigger value="resume">Generated Resume</TabsTrigger>
         </TabsList>
 
         <TabsContent value="experience">
@@ -292,6 +293,27 @@ export default function EmployerWorkerProfilePage() {
                   ))}
                 </TableBody>
               </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="resume">
+          <Card>
+            <CardHeader>
+              <CardTitle>Generated Resume</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {data.generated_resume_text ? (
+                <div className="rounded-lg border bg-muted/20 p-4">
+                  <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-6">
+                    {data.generated_resume_text}
+                  </pre>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No generated resume available.
+                </p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

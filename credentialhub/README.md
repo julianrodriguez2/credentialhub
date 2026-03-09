@@ -93,6 +93,9 @@ docker-compose up --build
 | `S3_ACCESS_KEY` | S3 access key |
 | `S3_SECRET_KEY` | S3 secret key |
 | `S3_BUCKET` | Target bucket for documents |
+| `OPENAI_API_KEY` | OpenAI API key for resume generation |
+| `OPENAI_MODEL` | OpenAI model name (default `gpt-4o-mini`) |
+| `OPENAI_BASE_URL` | OpenAI API base URL (default `https://api.openai.com/v1`) |
 | `BACKEND_PUBLIC_URL` | Public backend URL used in verification links |
 | `SMTP_HOST` | SMTP server hostname (optional) |
 | `SMTP_PORT` | SMTP server port (default `587`) |
@@ -120,14 +123,17 @@ docker-compose up --build
 - `app/api/v1/auth.py`: auth endpoints
 - `app/api/v1/worker.py`: worker profile, experience, competencies, references endpoints
 - `app/api/v1/worker_credentials.py`: worker credential upload/list/detail/delete endpoints
+- `app/api/v1/worker_resume.py`: worker resume generate/read/download endpoints
 - `app/api/v1/employer.py`: employer worker directory and worker profile viewer endpoints
 - `app/api/v1/reference_verification.py`: public reference token verification endpoint
 - `app/services/worker_service.py`: worker profile and CRUD business logic
 - `app/services/employer_service.py`: employer-side worker search/profile aggregation logic
 - `app/services/compliance_service.py`: worker compliance evaluation and snapshot generation
 - `app/services/reference_verification_service.py`: verification token lifecycle and email dispatch
+- `app/services/resume_service.py`: OpenAI prompt formatting and generated resume persistence
 - `app/services/storage_service.py`: S3/MinIO file upload and deletion service
 - `app/services/credential_status_service.py` + `app/utils/credential_status.py`: reusable credential status utility
+- `app/utils/pdf_generator.py`: resume text to PDF generation utility
 - `app/api/deps.py`: JWT authentication and RBAC dependencies
 - `app/services/storage.py`: S3-compatible storage abstraction
 
@@ -141,6 +147,7 @@ docker-compose up --build
 - Worker workspace pages:
   - `/dashboard/worker/profile`
   - `/dashboard/worker/compliance`
+  - `/dashboard/worker/resume`
   - `/dashboard/worker/experience`
   - `/dashboard/worker/competencies`
   - `/dashboard/worker/references`
@@ -174,6 +181,9 @@ docker-compose up --build
 - `DELETE /api/worker/references?id=<id>`
 - `POST /api/worker/references/send-verification/{reference_id}`
 - `GET /api/worker/compliance`
+- `POST /api/worker/resume/generate`
+- `GET /api/worker/resume`
+- `GET /api/worker/resume/download`
 - `POST /api/worker/credentials/upload`
 - `GET /api/worker/credentials`
 - `GET /api/worker/credentials/{id}`
@@ -191,6 +201,8 @@ docker-compose up --build
   - `employer` -> `EmployerProfile`
   - `admin` -> no profile row by default
 - Compliance status is automatically recomputed when worker credentials are created/deleted.
+- AI resume generation uses OpenAI Chat Completions and stores every generated version in `generated_resumes`.
 - This boilerplate uses SQLAlchemy `create_all` on startup. For production, introduce Alembic migrations.
 - If you already have an existing database, apply migration SQL before starting:
   - `infra/migrations/20260309_compliance_verification.sql`
+  - `infra/migrations/20260309_resume_generation.sql`

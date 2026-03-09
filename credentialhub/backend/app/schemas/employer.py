@@ -67,6 +67,7 @@ class EmployerWorkerProfileRead(BaseModel):
     profile_visibility: bool
     worker_compliance_status: str
     credential_summary: CredentialSummary
+    generated_resume_text: str | None
     work_experiences: list[EmployerWorkExperienceRead]
     competencies: list[EmployerCompetencyRead]
     references: list[EmployerReferenceRead]

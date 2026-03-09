@@ -139,6 +139,17 @@ export type SendReferenceVerificationResponse = {
   verification_sent_at: string;
 };
 
+export type GeneratedResume = {
+  id: string;
+  worker_id: number;
+  resume_text: string;
+  created_at: string;
+};
+
+export type GenerateResumeResponse = {
+  resume_text: string;
+};
+
 async function parseResponse<T>(response: Response): Promise<T> {
   const data = await response.json().catch(() => ({}));
 
@@ -265,6 +276,42 @@ export async function getCredentials(): Promise<Credential[]> {
 export async function getWorkerCompliance(): Promise<WorkerCompliance> {
   const response = await fetch("/api/worker/compliance", { cache: "no-store" });
   return parseResponse<WorkerCompliance>(response);
+}
+
+export async function getGeneratedResume(): Promise<GeneratedResume> {
+  const response = await fetch("/api/worker/resume", { cache: "no-store" });
+  return parseResponse<GeneratedResume>(response);
+}
+
+export async function generateResume(): Promise<GenerateResumeResponse> {
+  const response = await fetch("/api/worker/resume", { method: "POST" });
+  return parseResponse<GenerateResumeResponse>(response);
+}
+
+export async function downloadResumePdf(): Promise<void> {
+  const response = await fetch("/api/worker/resume/download", {
+    method: "GET",
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    const message =
+      typeof data.detail === "string" ? data.detail : "Failed to download PDF.";
+    throw new Error(message);
+  }
+
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  const contentDisposition = response.headers.get("content-disposition");
+  const filenameMatch = contentDisposition?.match(/filename="?([^"]+)"?/i);
+  anchor.href = url;
+  anchor.download = filenameMatch?.[1] ?? "credentialhub_resume.pdf";
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
 }
 
 export async function getCredential(id: string): Promise<Credential> {

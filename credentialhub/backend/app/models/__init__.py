@@ -1,6 +1,7 @@
 from app.models.credential import Credential, CredentialType
 from app.models.competency import Competency
 from app.models.employer_profile import EmployerProfile
+from app.models.generated_resume import GeneratedResume
 from app.models.reference import Reference
 from app.models.user import User, UserRole
 from app.models.work_experience import WorkExperience
@@ -16,4 +17,5 @@ __all__ = [
     "Reference",
     "Credential",
     "CredentialType",
+    "GeneratedResume",
 ]

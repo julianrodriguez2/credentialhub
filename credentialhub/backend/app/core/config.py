@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     S3_ACCESS_KEY_ID: str | None = None
     S3_SECRET_ACCESS_KEY: str | None = None
     S3_BUCKET: str = "credentialhub-documents"
+    OPENAI_API_KEY: str | None = None
+    OPENAI_MODEL: str = "gpt-4o-mini"
+    OPENAI_BASE_URL: str = "https://api.openai.com/v1"
     BACKEND_PUBLIC_URL: str = "http://localhost:8000"
     SMTP_HOST: str | None = None
     SMTP_PORT: int = 587

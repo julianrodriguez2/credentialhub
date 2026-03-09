@@ -59,6 +59,7 @@ export type EmployerWorkerProfile = {
   profile_visibility: boolean;
   worker_compliance_status: ComplianceStatus;
   credential_summary: EmployerCredentialSummary;
+  generated_resume_text: string | null;
   work_experiences: EmployerWorkerExperience[];
   competencies: EmployerWorkerCompetency[];
   references: EmployerWorkerReference[];

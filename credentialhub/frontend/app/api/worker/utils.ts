@@ -65,3 +65,41 @@ export async function forwardMultipartRequest(
 
   return NextResponse.json(data);
 }
+
+export async function forwardBinaryRequest(
+  path: string,
+  method: "GET",
+  token: string,
+) {
+  const response = await fetch(`${BACKEND_URL}${path}`, {
+    method,
+    cache: "no-store",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    return NextResponse.json(
+      { detail: data.detail ?? "Request failed." },
+      { status: response.status },
+    );
+  }
+
+  const content = await response.arrayBuffer();
+  const contentType =
+    response.headers.get("content-type") ?? "application/octet-stream";
+  const contentDisposition = response.headers.get("content-disposition");
+
+  const headers = new Headers();
+  headers.set("Content-Type", contentType);
+  if (contentDisposition) {
+    headers.set("Content-Disposition", contentDisposition);
+  }
+
+  return new NextResponse(content, {
+    status: response.status,
+    headers,
+  });
+}

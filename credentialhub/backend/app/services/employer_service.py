@@ -131,6 +131,7 @@ def get_visible_worker_profile(
             selectinload(WorkerProfile.user).selectinload(User.competencies),
             selectinload(WorkerProfile.user).selectinload(User.references),
             selectinload(WorkerProfile.user).selectinload(User.credentials),
+            selectinload(WorkerProfile.user).selectinload(User.generated_resumes),
         )
     )
     if profile is None:
@@ -193,6 +194,16 @@ def get_visible_worker_profile(
             expired_count=credential_summary.expired_count,
         )
     )
+    latest_resume = next(
+        iter(
+            sorted(
+                profile.user.generated_resumes,
+                key=lambda value: value.created_at,
+                reverse=True,
+            )
+        ),
+        None,
+    )
 
     return EmployerWorkerProfileRead(
         worker_id=profile.user_id,
@@ -202,6 +213,7 @@ def get_visible_worker_profile(
         profile_visibility=profile.profile_visibility,
         worker_compliance_status=compliance_status,
         credential_summary=credential_summary,
+        generated_resume_text=latest_resume.resume_text if latest_resume else None,
         work_experiences=experiences,
         competencies=competencies,
         references=references,
