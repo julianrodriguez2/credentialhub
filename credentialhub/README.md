@@ -29,10 +29,12 @@ credentialhub/
     app/
       api/auth/
       api/employer/
+      api/public/
       api/worker/
       dashboard/
         employer/
         worker/
+      workers/
       login/
       register/
     components/
@@ -126,6 +128,7 @@ docker-compose up --build
 - `app/api/v1/worker_credentials.py`: worker credential parse/confirm/reparse and credential list/detail/delete endpoints
 - `app/api/v1/worker_resume.py`: worker resume generate/read/download endpoints
 - `app/api/v1/employer.py`: employer worker directory and worker profile viewer endpoints
+- `app/api/v1/public.py`: public worker profile endpoint by slug
 - `app/api/v1/reference_verification.py`: public reference token verification endpoint
 - `app/services/worker_service.py`: worker profile and CRUD business logic
 - `app/services/employer_service.py`: employer-side worker search/profile aggregation logic
@@ -145,6 +148,7 @@ docker-compose up --build
 - Route handlers in `app/api/auth/*` proxy to backend auth and set HTTP-only auth cookie
 - Route handlers in `app/api/worker/*` proxy worker CRUD requests with JWT from cookies
 - Route handlers in `app/api/employer/*` proxy employer worker discovery/profile requests
+- Route handlers in `app/api/public/*` proxy unauthenticated public profile reads
 - `middleware.ts` protects `/dashboard` and redirects authenticated users away from auth pages
 - Worker workspace pages:
   - `/dashboard/worker/profile`
@@ -154,12 +158,16 @@ docker-compose up --build
   - `/dashboard/worker/competencies`
   - `/dashboard/worker/references`
   - `/dashboard/worker/credentials`
+  - `/dashboard/worker/public-profile`
+- Public worker profile page:
+  - `/workers/[slug]`
 - Employer workspace pages:
   - `/dashboard/employer`
   - `/dashboard/employer/workers`
   - `/dashboard/employer/workers/[id]`
 - Role-based redirects keep employers/admins out of worker routes
 - Workers control employer visibility with `WorkerProfile.profile_visibility`
+- Workers can generate public profile links via `WorkerProfile.public_slug`
 - React Query drives mutation state for login/register forms
 - Zustand stores lightweight client auth state
 
@@ -196,6 +204,7 @@ docker-compose up --build
 - `GET /api/employer/workers`
   - optional query params: `search`, `competency`, `years_experience`, `credential_status`
 - `GET /api/employer/workers/{worker_id}`
+- `GET /api/public/workers/{public_slug}`
 - `GET /api/reference/verify?token=<verification_token>`
 
 ## Notes
@@ -208,9 +217,11 @@ docker-compose up --build
 - Compliance status is automatically recomputed when worker credentials are created/deleted.
 - AI resume generation uses OpenAI Chat Completions and stores every generated version in `generated_resumes`.
 - Credential parsing uploads files, extracts text (PDF/OCR), parses metadata with OpenAI, and records parse audits in `parsed_credential_audits`.
+- Public worker profiles only expose safe fields and never include worker emails, user IDs, or credential document URLs.
 - OCR requires a system Tesseract installation in addition to Python packages (`pytesseract`, `Pillow`).
 - This boilerplate uses SQLAlchemy `create_all` on startup. For production, introduce Alembic migrations.
 - If you already have an existing database, apply migration SQL before starting:
   - `infra/migrations/20260309_compliance_verification.sql`
   - `infra/migrations/20260309_resume_generation.sql`
   - `infra/migrations/20260309_document_parsing.sql`
+  - `infra/migrations/20260309_public_profiles.sql`

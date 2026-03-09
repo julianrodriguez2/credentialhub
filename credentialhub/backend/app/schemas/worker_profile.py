@@ -10,6 +10,7 @@ class WorkerProfileRead(BaseModel):
     bio: str
     years_experience: int
     profile_visibility: bool
+    public_slug: str | None
     compliance_status: str
     last_compliance_check: datetime | None
     created_at: datetime

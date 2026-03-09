@@ -1,4 +1,7 @@
-from uuid import UUID
+import re
+import secrets
+import unicodedata
+from uuid import UUID, uuid4
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -11,6 +14,31 @@ from app.schemas.competency import CompetencyCreate
 from app.schemas.reference import ReferenceCreate
 from app.schemas.work_experience import WorkExperienceCreate, WorkExperienceUpdate
 from app.schemas.worker_profile import WorkerProfileUpdate
+
+
+def _slugify(value: str) -> str:
+    normalized = (
+        unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
+    )
+    slug = re.sub(r"[^a-zA-Z0-9]+", "-", normalized).strip("-").lower()
+    return slug or "worker"
+
+
+def _generate_unique_public_slug(db: Session, full_name: str) -> str:
+    base_slug = _slugify(full_name)
+    for _ in range(20):
+        candidate = f"{base_slug}-{secrets.randbelow(9000) + 1000}"
+        exists = db.scalar(
+            select(WorkerProfile.id).where(WorkerProfile.public_slug == candidate)
+        )
+        if exists is None:
+            return candidate
+
+    fallback = f"{base_slug}-{uuid4().hex[:8]}"
+    exists = db.scalar(select(WorkerProfile.id).where(WorkerProfile.public_slug == fallback))
+    if exists is None:
+        return fallback
+    return f"{base_slug}-{uuid4().hex}"
 
 
 def get_or_create_worker_profile(db: Session, worker_id: int) -> WorkerProfile:
@@ -30,6 +58,10 @@ def get_or_create_worker_profile(db: Session, worker_id: int) -> WorkerProfile:
         db.add(profile)
         db.commit()
         db.refresh(profile)
+    elif profile.profile_visibility and not profile.public_slug:
+        profile.public_slug = _generate_unique_public_slug(db, profile.full_name)
+        db.commit()
+        db.refresh(profile)
 
     return profile
 
@@ -44,6 +76,10 @@ def update_worker_profile(
     profile.bio = payload.bio
     profile.years_experience = payload.years_experience
     profile.profile_visibility = payload.profile_visibility
+
+    if profile.profile_visibility and not profile.public_slug:
+        profile.public_slug = _generate_unique_public_slug(db, payload.full_name)
+
     db.commit()
     db.refresh(profile)
     return profile

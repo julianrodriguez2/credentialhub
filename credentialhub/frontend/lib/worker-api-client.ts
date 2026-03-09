@@ -11,6 +11,7 @@ export type WorkerProfile = {
   bio: string;
   years_experience: number;
   profile_visibility: boolean;
+  public_slug: string | null;
   compliance_status: ComplianceStatus;
   last_compliance_check: string | null;
   created_at: string;
