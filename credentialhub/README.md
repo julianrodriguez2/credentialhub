@@ -123,6 +123,7 @@ docker-compose up --build
 - `app/api/v1/auth.py`: auth endpoints
 - `app/api/v1/worker.py`: worker profile, experience, competencies, references endpoints
 - `app/api/v1/worker_credentials.py`: worker credential upload/list/detail/delete endpoints
+- `app/api/v1/worker_credentials.py`: worker credential parse/confirm/reparse and credential list/detail/delete endpoints
 - `app/api/v1/worker_resume.py`: worker resume generate/read/download endpoints
 - `app/api/v1/employer.py`: employer worker directory and worker profile viewer endpoints
 - `app/api/v1/reference_verification.py`: public reference token verification endpoint
@@ -131,6 +132,7 @@ docker-compose up --build
 - `app/services/compliance_service.py`: worker compliance evaluation and snapshot generation
 - `app/services/reference_verification_service.py`: verification token lifecycle and email dispatch
 - `app/services/resume_service.py`: OpenAI prompt formatting and generated resume persistence
+- `app/services/document_parser_service.py`: OCR/PDF extraction and AI parsing for credential metadata
 - `app/services/storage_service.py`: S3/MinIO file upload and deletion service
 - `app/services/credential_status_service.py` + `app/utils/credential_status.py`: reusable credential status utility
 - `app/utils/pdf_generator.py`: resume text to PDF generation utility
@@ -185,6 +187,9 @@ docker-compose up --build
 - `GET /api/worker/resume`
 - `GET /api/worker/resume/download`
 - `POST /api/worker/credentials/upload`
+- `POST /api/worker/credentials/parse`
+- `POST /api/worker/credentials/confirm`
+- `POST /api/worker/credentials/reparse`
 - `GET /api/worker/credentials`
 - `GET /api/worker/credentials/{id}`
 - `DELETE /api/worker/credentials/{id}`
@@ -202,7 +207,10 @@ docker-compose up --build
   - `admin` -> no profile row by default
 - Compliance status is automatically recomputed when worker credentials are created/deleted.
 - AI resume generation uses OpenAI Chat Completions and stores every generated version in `generated_resumes`.
+- Credential parsing uploads files, extracts text (PDF/OCR), parses metadata with OpenAI, and records parse audits in `parsed_credential_audits`.
+- OCR requires a system Tesseract installation in addition to Python packages (`pytesseract`, `Pillow`).
 - This boilerplate uses SQLAlchemy `create_all` on startup. For production, introduce Alembic migrations.
 - If you already have an existing database, apply migration SQL before starting:
   - `infra/migrations/20260309_compliance_verification.sql`
   - `infra/migrations/20260309_resume_generation.sql`
+  - `infra/migrations/20260309_document_parsing.sql`

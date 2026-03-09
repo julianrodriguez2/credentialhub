@@ -56,7 +56,7 @@ class DocumentStorageService:
             return f"{self.endpoint_url.rstrip('/')}/{self.bucket}/{key}"
         return f"https://{self.bucket}.s3.{self.region}.amazonaws.com/{key}"
 
-    def delete_file(self, file_url: str) -> None:
+    def extract_object_key(self, file_url: str) -> str:
         parsed = urlparse(file_url)
         path = parsed.path.lstrip("/")
         if not path:
@@ -69,7 +69,20 @@ class DocumentStorageService:
 
         if not key:
             raise ValueError("Unable to parse object key from URL.")
+        return key
 
+    def download_file(self, file_url: str) -> tuple[bytes, str | None]:
+        key = self.extract_object_key(file_url)
+        response = self.client.get_object(Bucket=self.bucket, Key=key)
+        body = response.get("Body")
+        if body is None:
+            raise ValueError("Unable to read document from storage.")
+        content = body.read()
+        content_type = response.get("ContentType")
+        return content, content_type
+
+    def delete_file(self, file_url: str) -> None:
+        key = self.extract_object_key(file_url)
         self.client.delete_object(Bucket=self.bucket, Key=key)
 
 

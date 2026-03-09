@@ -110,6 +110,31 @@ export type UploadCredentialPayload = {
   file: File;
 };
 
+export type ParsedCredentialResult = {
+  credential_name: string | null;
+  credential_type: CredentialType | null;
+  issuing_organization: string | null;
+  issue_date: string | null;
+  expiration_date: string | null;
+  confidence_score: number | null;
+  raw_extracted_text: string | null;
+};
+
+export type CredentialParseResponse = {
+  file_url: string;
+  parsed_fields: ParsedCredentialResult;
+  parse_warning: string | null;
+};
+
+export type ConfirmCredentialPayload = {
+  file_url: string;
+  credential_name: string;
+  credential_type: CredentialType;
+  issuing_organization: string;
+  issue_date: string;
+  expiration_date: string | null;
+};
+
 export type ComplianceSummary = {
   valid_count: number;
   expiring_count: number;
@@ -271,6 +296,41 @@ export async function deleteReference(id: number): Promise<{ success: true }> {
 export async function getCredentials(): Promise<Credential[]> {
   const response = await fetch("/api/worker/credentials/", { cache: "no-store" });
   return parseResponse<Credential[]>(response);
+}
+
+export async function parseCredentialDocument(
+  file: File,
+): Promise<CredentialParseResponse> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch("/api/worker/credentials/parse", {
+    method: "POST",
+    body: formData,
+  });
+  return parseResponse<CredentialParseResponse>(response);
+}
+
+export async function reparseCredentialDocument(
+  fileUrl: string,
+): Promise<CredentialParseResponse> {
+  const response = await fetch("/api/worker/credentials/reparse", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ file_url: fileUrl }),
+  });
+  return parseResponse<CredentialParseResponse>(response);
+}
+
+export async function confirmParsedCredential(
+  payload: ConfirmCredentialPayload,
+): Promise<Credential> {
+  const response = await fetch("/api/worker/credentials/confirm", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  return parseResponse<Credential>(response);
 }
 
 export async function getWorkerCompliance(): Promise<WorkerCompliance> {

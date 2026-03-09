@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from app.models.competency import Competency
     from app.models.employer_profile import EmployerProfile
     from app.models.generated_resume import GeneratedResume
+    from app.models.parsed_credential_audit import ParsedCredentialAudit
     from app.models.reference import Reference
     from app.models.work_experience import WorkExperience
     from app.models.worker_profile import WorkerProfile
@@ -57,5 +58,8 @@ class User(Base):
         back_populates="worker", cascade="all, delete-orphan"
     )
     generated_resumes: Mapped[list["GeneratedResume"]] = relationship(
+        back_populates="worker", cascade="all, delete-orphan"
+    )
+    parsed_credential_audits: Mapped[list["ParsedCredentialAudit"]] = relationship(
         back_populates="worker", cascade="all, delete-orphan"
     )
