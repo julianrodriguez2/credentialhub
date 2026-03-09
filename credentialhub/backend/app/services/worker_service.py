@@ -24,6 +24,7 @@ def get_or_create_worker_profile(db: Session, worker_id: int) -> WorkerProfile:
             full_name="",
             bio="",
             years_experience=0,
+            profile_visibility=False,
         )
         db.add(profile)
         db.commit()
@@ -41,6 +42,7 @@ def update_worker_profile(
     profile.full_name = payload.full_name
     profile.bio = payload.bio
     profile.years_experience = payload.years_experience
+    profile.profile_visibility = payload.profile_visibility
     db.commit()
     db.refresh(profile)
     return profile

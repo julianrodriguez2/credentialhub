@@ -23,7 +23,10 @@ const navItemsByRole: Record<Role, Array<{ href: string; label: string }>> = {
     { href: "/dashboard/worker/references", label: "References" },
     { href: "/dashboard/worker/credentials", label: "Credentials" },
   ],
-  employer: [{ href: "/dashboard/employer", label: "Dashboard" }],
+  employer: [
+    { href: "/dashboard/employer", label: "Dashboard" },
+    { href: "/dashboard/employer/workers", label: "Workers" },
+  ],
   admin: [{ href: "/dashboard/admin", label: "Dashboard" }],
 };
 

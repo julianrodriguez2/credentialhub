@@ -4,6 +4,7 @@ export type WorkerProfile = {
   full_name: string;
   bio: string;
   years_experience: number;
+  profile_visibility: boolean;
   created_at: string;
 };
 
@@ -11,6 +12,7 @@ export type WorkerProfilePayload = {
   full_name: string;
   bio: string;
   years_experience: number;
+  profile_visibility: boolean;
 };
 
 export type WorkExperience = {

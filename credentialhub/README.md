@@ -27,7 +27,11 @@ credentialhub/
   frontend/
     app/
       api/auth/
+      api/employer/
+      api/worker/
       dashboard/
+        employer/
+        worker/
       login/
       register/
     components/
@@ -107,7 +111,9 @@ docker-compose up --build
 - `app/api/v1/auth.py`: auth endpoints
 - `app/api/v1/worker.py`: worker profile, experience, competencies, references endpoints
 - `app/api/v1/worker_credentials.py`: worker credential upload/list/detail/delete endpoints
+- `app/api/v1/employer.py`: employer worker directory and worker profile viewer endpoints
 - `app/services/worker_service.py`: worker profile and CRUD business logic
+- `app/services/employer_service.py`: employer-side worker search/profile aggregation logic
 - `app/services/storage_service.py`: S3/MinIO file upload and deletion service
 - `app/services/credential_status_service.py`: computed status (`valid`, `expiring`, `expired`)
 - `app/api/deps.py`: JWT authentication and RBAC dependencies
@@ -118,6 +124,7 @@ docker-compose up --build
 - App Router pages: `/login`, `/register`, `/dashboard`
 - Route handlers in `app/api/auth/*` proxy to backend auth and set HTTP-only auth cookie
 - Route handlers in `app/api/worker/*` proxy worker CRUD requests with JWT from cookies
+- Route handlers in `app/api/employer/*` proxy employer worker discovery/profile requests
 - `middleware.ts` protects `/dashboard` and redirects authenticated users away from auth pages
 - Worker workspace pages:
   - `/dashboard/worker/profile`
@@ -125,7 +132,12 @@ docker-compose up --build
   - `/dashboard/worker/competencies`
   - `/dashboard/worker/references`
   - `/dashboard/worker/credentials`
+- Employer workspace pages:
+  - `/dashboard/employer`
+  - `/dashboard/employer/workers`
+  - `/dashboard/employer/workers/[id]`
 - Role-based redirects keep employers/admins out of worker routes
+- Workers control employer visibility with `WorkerProfile.profile_visibility`
 - React Query drives mutation state for login/register forms
 - Zustand stores lightweight client auth state
 
@@ -151,12 +163,17 @@ docker-compose up --build
 - `GET /api/worker/credentials`
 - `GET /api/worker/credentials/{id}`
 - `DELETE /api/worker/credentials/{id}`
+- `GET /api/employer/workers`
+  - optional query params: `search`, `competency`, `years_experience`, `credential_status`
+- `GET /api/employer/workers/{worker_id}`
 
 ## Notes
 
 - JWT tokens are stored in an HTTP-only cookie (`credentialhub_token`) by frontend route handlers.
 - The backend creates role-specific profiles for newly registered users:
-  - `worker` -> `WorkerProfile`
+  - `worker` -> `WorkerProfile` (`profile_visibility=false` by default)
   - `employer` -> `EmployerProfile`
   - `admin` -> no profile row by default
 - This boilerplate uses SQLAlchemy `create_all` on startup. For production, introduce Alembic migrations.
+- If you already have an existing database, add the visibility column manually before starting:
+  - `ALTER TABLE worker_profiles ADD COLUMN IF NOT EXISTS profile_visibility BOOLEAN NOT NULL DEFAULT FALSE;`

@@ -34,6 +34,7 @@ export default function WorkerProfilePage() {
     full_name: "",
     bio: "",
     years_experience: 0,
+    profile_visibility: false,
   });
 
   useEffect(() => {
@@ -42,6 +43,7 @@ export default function WorkerProfilePage() {
         full_name: data.full_name,
         bio: data.bio,
         years_experience: data.years_experience,
+        profile_visibility: data.profile_visibility,
       });
     }
   }, [data]);
@@ -113,6 +115,23 @@ export default function WorkerProfilePage() {
               }
               required
             />
+          </FormItem>
+
+          <FormItem>
+            <label className="flex items-center gap-3 text-sm font-medium">
+              <input
+                type="checkbox"
+                checked={form.profile_visibility}
+                onChange={(event) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    profile_visibility: event.target.checked,
+                  }))
+                }
+                className="h-4 w-4 rounded border-input"
+              />
+              Enable profile sharing with employers
+            </label>
           </FormItem>
 
           <Button type="submit" disabled={saveMutation.isPending || isLoading}>

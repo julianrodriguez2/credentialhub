@@ -34,6 +34,7 @@ def create_user(db: Session, payload: RegisterRequest) -> User:
                 full_name="",
                 bio="",
                 years_experience=0,
+                profile_visibility=False,
             )
         )
     elif user.role == UserRole.employer:
