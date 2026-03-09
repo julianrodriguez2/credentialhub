@@ -32,6 +32,13 @@ const statusClassByType = {
   expired: "border-red-200 bg-red-50 text-red-700",
 };
 
+const complianceStatusClassByType = {
+  compliant: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  warning: "border-amber-200 bg-amber-50 text-amber-700",
+  non_compliant: "border-red-200 bg-red-50 text-red-700",
+  incomplete: "border-slate-200 bg-slate-100 text-slate-700",
+};
+
 function formatDate(value: string | null): string {
   if (!value) return "N/A";
   return new Date(`${value}T00:00:00`).toLocaleDateString();
@@ -91,9 +98,45 @@ export default function EmployerWorkerProfilePage() {
         </CardHeader>
         <CardContent className="space-y-2">
           <p className="text-sm">{data.bio || "No bio provided."}</p>
-          <Badge variant="outline">
-            Profile sharing: {data.profile_visibility ? "Enabled" : "Disabled"}
-          </Badge>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="outline">
+              Profile sharing: {data.profile_visibility ? "Enabled" : "Disabled"}
+            </Badge>
+            <Badge
+              variant="outline"
+              className={
+                complianceStatusClassByType[
+                  data.worker_compliance_status as keyof typeof complianceStatusClassByType
+                ]
+              }
+            >
+              Compliance: {data.worker_compliance_status.replace("_", " ").toUpperCase()}
+            </Badge>
+          </div>
+          <div className="grid gap-2 pt-2 md:grid-cols-4">
+            <div className="rounded-lg border p-3 text-sm">
+              <p className="text-xs text-muted-foreground">Valid credentials</p>
+              <p className="font-semibold text-emerald-700">
+                {data.credential_summary.valid_count}
+              </p>
+            </div>
+            <div className="rounded-lg border p-3 text-sm">
+              <p className="text-xs text-muted-foreground">Expiring credentials</p>
+              <p className="font-semibold text-amber-700">
+                {data.credential_summary.expiring_count}
+              </p>
+            </div>
+            <div className="rounded-lg border p-3 text-sm">
+              <p className="text-xs text-muted-foreground">Expired credentials</p>
+              <p className="font-semibold text-red-700">
+                {data.credential_summary.expired_count}
+              </p>
+            </div>
+            <div className="rounded-lg border p-3 text-sm">
+              <p className="text-xs text-muted-foreground">Total credentials</p>
+              <p className="font-semibold">{data.credential_summary.total_count}</p>
+            </div>
+          </div>
         </CardContent>
       </Card>
 

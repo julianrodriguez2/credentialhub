@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.models.credential import Credential
 from app.schemas.credential import CredentialUploadPayload
+from app.services.compliance_service import refresh_worker_compliance
 
 
 def create_credential(
@@ -21,6 +22,7 @@ def create_credential(
     db.add(credential)
     db.commit()
     db.refresh(credential)
+    refresh_worker_compliance(db, worker_id)
     return credential
 
 
@@ -45,5 +47,7 @@ def get_credential_by_id(
 
 
 def delete_credential(db: Session, credential: Credential) -> None:
+    worker_id = credential.worker_id
     db.delete(credential)
     db.commit()
+    refresh_worker_compliance(db, worker_id)

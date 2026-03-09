@@ -13,10 +13,10 @@ class CredentialStatusFilter(str, enum.Enum):
 
 
 class CredentialSummary(BaseModel):
-    valid: int = 0
-    expiring: int = 0
-    expired: int = 0
-    total: int = 0
+    valid_count: int = 0
+    expiring_count: int = 0
+    expired_count: int = 0
+    total_count: int = 0
 
 
 class EmployerWorkerListItem(BaseModel):
@@ -65,6 +65,8 @@ class EmployerWorkerProfileRead(BaseModel):
     bio: str
     years_experience: int
     profile_visibility: bool
+    worker_compliance_status: str
+    credential_summary: CredentialSummary
     work_experiences: list[EmployerWorkExperienceRead]
     competencies: list[EmployerCompetencyRead]
     references: list[EmployerReferenceRead]

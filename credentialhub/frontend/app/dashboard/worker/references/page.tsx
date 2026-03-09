@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Trash2 } from "lucide-react";
+import { Send, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -21,6 +21,7 @@ import {
   addReference,
   deleteReference,
   getReferences,
+  sendReferenceVerification,
   type ReferencePayload,
 } from "@/lib/worker-api-client";
 import { workerQueryKeys } from "@/lib/worker-query-keys";
@@ -58,6 +59,15 @@ export default function WorkerReferencesPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: workerQueryKeys.references });
       toast.success("Reference removed.");
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const sendVerificationMutation = useMutation({
+    mutationFn: sendReferenceVerification,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: workerQueryKeys.references });
+      toast.success("Verification request sent.");
     },
     onError: (error: Error) => toast.error(error.message),
   });
@@ -181,7 +191,11 @@ export default function WorkerReferencesPage() {
                 <div className="flex items-center gap-2">
                   <p className="font-medium">{reference.reference_name}</p>
                   <Badge variant={reference.verified ? "default" : "outline"}>
-                    {reference.verified ? "Verified" : "Unverified"}
+                    {reference.verified
+                      ? "Verified"
+                      : reference.verification_sent_at
+                        ? "Pending"
+                        : "Unverified"}
                   </Badge>
                 </div>
                 <p className="text-sm text-muted-foreground">
@@ -193,15 +207,43 @@ export default function WorkerReferencesPage() {
                 <p className="text-sm text-muted-foreground">
                   Relationship: {reference.relationship}
                 </p>
+                {reference.verification_sent_at && !reference.verified ? (
+                  <p className="text-xs text-muted-foreground">
+                    Verification sent:{" "}
+                    {new Date(reference.verification_sent_at).toLocaleString()}
+                  </p>
+                ) : null}
+                {reference.verification_confirmed_at ? (
+                  <p className="text-xs text-muted-foreground">
+                    Verified on:{" "}
+                    {new Date(reference.verification_confirmed_at).toLocaleString()}
+                  </p>
+                ) : null}
               </div>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => deleteMutation.mutate(reference.id)}
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </Button>
+              <div className="flex gap-2">
+                {!reference.verified ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={sendVerificationMutation.isPending}
+                    onClick={() => sendVerificationMutation.mutate(reference.id)}
+                  >
+                    <Send className="mr-2 h-4 w-4" />
+                    {sendVerificationMutation.isPending
+                      ? "Sending..."
+                      : "Send Verification"}
+                  </Button>
+                ) : null}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={deleteMutation.isPending}
+                  onClick={() => deleteMutation.mutate(reference.id)}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </Button>
+              </div>
             </div>
           ))}
         </CardContent>

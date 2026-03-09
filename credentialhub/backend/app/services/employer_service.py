@@ -13,19 +13,23 @@ from app.schemas.employer import (
     EmployerWorkerListItem,
     EmployerWorkerProfileRead,
 )
-from app.services.credential_status_service import get_credential_status
+from app.services.compliance_service import (
+    CredentialSummaryCounts,
+    determine_worker_compliance_status,
+)
+from app.utils.credential_status import get_credential_status
 
 
 def build_credential_summary(credentials: list[EmployerCredentialRead]) -> CredentialSummary:
     summary = CredentialSummary()
     for credential in credentials:
-        summary.total += 1
+        summary.total_count += 1
         if credential.status == "valid":
-            summary.valid += 1
+            summary.valid_count += 1
         elif credential.status == "expiring":
-            summary.expiring += 1
+            summary.expiring_count += 1
         elif credential.status == "expired":
-            summary.expired += 1
+            summary.expired_count += 1
     return summary
 
 
@@ -181,6 +185,14 @@ def get_visible_worker_profile(
             reverse=True,
         )
     ]
+    credential_summary = build_credential_summary(credentials)
+    compliance_status = determine_worker_compliance_status(
+        CredentialSummaryCounts(
+            valid_count=credential_summary.valid_count,
+            expiring_count=credential_summary.expiring_count,
+            expired_count=credential_summary.expired_count,
+        )
+    )
 
     return EmployerWorkerProfileRead(
         worker_id=profile.user_id,
@@ -188,6 +200,8 @@ def get_visible_worker_profile(
         bio=profile.bio,
         years_experience=profile.years_experience,
         profile_visibility=profile.profile_visibility,
+        worker_compliance_status=compliance_status,
+        credential_summary=credential_summary,
         work_experiences=experiences,
         competencies=competencies,
         references=references,

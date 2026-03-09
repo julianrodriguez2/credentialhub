@@ -21,6 +21,13 @@ class Settings(BaseSettings):
     S3_ACCESS_KEY_ID: str | None = None
     S3_SECRET_ACCESS_KEY: str | None = None
     S3_BUCKET: str = "credentialhub-documents"
+    BACKEND_PUBLIC_URL: str = "http://localhost:8000"
+    SMTP_HOST: str | None = None
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: str | None = None
+    SMTP_PASSWORD: str | None = None
+    SMTP_USE_TLS: bool = True
+    SMTP_FROM: str | None = None
 
     model_config = SettingsConfigDict(
         env_file=".env",

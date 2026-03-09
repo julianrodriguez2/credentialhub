@@ -10,6 +10,8 @@ class WorkerProfileRead(BaseModel):
     bio: str
     years_experience: int
     profile_visibility: bool
+    compliance_status: str
+    last_compliance_check: datetime | None
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

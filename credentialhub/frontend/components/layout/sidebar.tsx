@@ -18,6 +18,7 @@ type SidebarProps = {
 const navItemsByRole: Record<Role, Array<{ href: string; label: string }>> = {
   worker: [
     { href: "/dashboard/worker/profile", label: "Profile" },
+    { href: "/dashboard/worker/compliance", label: "Compliance" },
     { href: "/dashboard/worker/experience", label: "Experience" },
     { href: "/dashboard/worker/competencies", label: "Competencies" },
     { href: "/dashboard/worker/references", label: "References" },

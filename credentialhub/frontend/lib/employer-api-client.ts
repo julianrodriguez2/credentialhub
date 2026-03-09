@@ -1,10 +1,14 @@
-import type { CredentialStatus, CredentialType } from "@/lib/worker-api-client";
+import type {
+  ComplianceStatus,
+  CredentialStatus,
+  CredentialType,
+} from "@/lib/worker-api-client";
 
 export type EmployerCredentialSummary = {
-  valid: number;
-  expiring: number;
-  expired: number;
-  total: number;
+  valid_count: number;
+  expiring_count: number;
+  expired_count: number;
+  total_count: number;
 };
 
 export type EmployerWorkerListItem = {
@@ -53,6 +57,8 @@ export type EmployerWorkerProfile = {
   bio: string;
   years_experience: number;
   profile_visibility: boolean;
+  worker_compliance_status: ComplianceStatus;
+  credential_summary: EmployerCredentialSummary;
   work_experiences: EmployerWorkerExperience[];
   competencies: EmployerWorkerCompetency[];
   references: EmployerWorkerReference[];

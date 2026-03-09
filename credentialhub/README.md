@@ -21,6 +21,7 @@ credentialhub/
       models/
       schemas/
       services/
+      utils/
     .env
     .env.example
     requirements.txt
@@ -44,6 +45,7 @@ credentialhub/
     frontend.Dockerfile
     backend.env.example
     frontend.env.example
+    migrations/
   docker-compose.yml
   README.md
 ```
@@ -91,6 +93,13 @@ docker-compose up --build
 | `S3_ACCESS_KEY` | S3 access key |
 | `S3_SECRET_KEY` | S3 secret key |
 | `S3_BUCKET` | Target bucket for documents |
+| `BACKEND_PUBLIC_URL` | Public backend URL used in verification links |
+| `SMTP_HOST` | SMTP server hostname (optional) |
+| `SMTP_PORT` | SMTP server port (default `587`) |
+| `SMTP_USERNAME` | SMTP username (optional) |
+| `SMTP_PASSWORD` | SMTP password (optional) |
+| `SMTP_USE_TLS` | Enable TLS for SMTP (`true`/`false`) |
+| `SMTP_FROM` | Sender email address for verification requests |
 
 ### Frontend (`frontend/.env`)
 
@@ -112,10 +121,13 @@ docker-compose up --build
 - `app/api/v1/worker.py`: worker profile, experience, competencies, references endpoints
 - `app/api/v1/worker_credentials.py`: worker credential upload/list/detail/delete endpoints
 - `app/api/v1/employer.py`: employer worker directory and worker profile viewer endpoints
+- `app/api/v1/reference_verification.py`: public reference token verification endpoint
 - `app/services/worker_service.py`: worker profile and CRUD business logic
 - `app/services/employer_service.py`: employer-side worker search/profile aggregation logic
+- `app/services/compliance_service.py`: worker compliance evaluation and snapshot generation
+- `app/services/reference_verification_service.py`: verification token lifecycle and email dispatch
 - `app/services/storage_service.py`: S3/MinIO file upload and deletion service
-- `app/services/credential_status_service.py`: computed status (`valid`, `expiring`, `expired`)
+- `app/services/credential_status_service.py` + `app/utils/credential_status.py`: reusable credential status utility
 - `app/api/deps.py`: JWT authentication and RBAC dependencies
 - `app/services/storage.py`: S3-compatible storage abstraction
 
@@ -128,6 +140,7 @@ docker-compose up --build
 - `middleware.ts` protects `/dashboard` and redirects authenticated users away from auth pages
 - Worker workspace pages:
   - `/dashboard/worker/profile`
+  - `/dashboard/worker/compliance`
   - `/dashboard/worker/experience`
   - `/dashboard/worker/competencies`
   - `/dashboard/worker/references`
@@ -159,6 +172,8 @@ docker-compose up --build
 - `POST /api/worker/references`
 - `GET /api/worker/references`
 - `DELETE /api/worker/references?id=<id>`
+- `POST /api/worker/references/send-verification/{reference_id}`
+- `GET /api/worker/compliance`
 - `POST /api/worker/credentials/upload`
 - `GET /api/worker/credentials`
 - `GET /api/worker/credentials/{id}`
@@ -166,14 +181,16 @@ docker-compose up --build
 - `GET /api/employer/workers`
   - optional query params: `search`, `competency`, `years_experience`, `credential_status`
 - `GET /api/employer/workers/{worker_id}`
+- `GET /api/reference/verify?token=<verification_token>`
 
 ## Notes
 
 - JWT tokens are stored in an HTTP-only cookie (`credentialhub_token`) by frontend route handlers.
 - The backend creates role-specific profiles for newly registered users:
-  - `worker` -> `WorkerProfile` (`profile_visibility=false` by default)
+  - `worker` -> `WorkerProfile` (`profile_visibility=false`, `compliance_status=incomplete` by default)
   - `employer` -> `EmployerProfile`
   - `admin` -> no profile row by default
+- Compliance status is automatically recomputed when worker credentials are created/deleted.
 - This boilerplate uses SQLAlchemy `create_all` on startup. For production, introduce Alembic migrations.
-- If you already have an existing database, add the visibility column manually before starting:
-  - `ALTER TABLE worker_profiles ADD COLUMN IF NOT EXISTS profile_visibility BOOLEAN NOT NULL DEFAULT FALSE;`
+- If you already have an existing database, apply migration SQL before starting:
+  - `infra/migrations/20260309_compliance_verification.sql`

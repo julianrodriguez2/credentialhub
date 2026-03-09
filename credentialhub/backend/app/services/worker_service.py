@@ -25,6 +25,7 @@ def get_or_create_worker_profile(db: Session, worker_id: int) -> WorkerProfile:
             bio="",
             years_experience=0,
             profile_visibility=False,
+            compliance_status="incomplete",
         )
         db.add(profile)
         db.commit()

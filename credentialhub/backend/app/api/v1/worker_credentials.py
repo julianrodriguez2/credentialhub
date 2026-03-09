@@ -15,8 +15,8 @@ from app.services.credential_service import (
     get_credential_by_id,
     list_credentials,
 )
-from app.services.credential_status_service import get_credential_status
 from app.services.storage_service import DocumentStorageService, get_storage_service
+from app.utils.credential_status import get_credential_status
 
 router = APIRouter(prefix="/api/worker/credentials", tags=["worker-credentials"])
 

@@ -142,16 +142,16 @@ export default function EmployerWorkersPage() {
 
               <div className="grid grid-cols-4 gap-2 text-xs">
                 <Badge variant="outline" className="justify-center border-emerald-200 bg-emerald-50 text-emerald-700">
-                  Valid: {worker.credential_summary.valid}
+                  Valid: {worker.credential_summary.valid_count}
                 </Badge>
                 <Badge variant="outline" className="justify-center border-amber-200 bg-amber-50 text-amber-700">
-                  Expiring: {worker.credential_summary.expiring}
+                  Expiring: {worker.credential_summary.expiring_count}
                 </Badge>
                 <Badge variant="outline" className="justify-center border-red-200 bg-red-50 text-red-700">
-                  Expired: {worker.credential_summary.expired}
+                  Expired: {worker.credential_summary.expired_count}
                 </Badge>
                 <Badge variant="outline" className="justify-center">
-                  Total: {worker.credential_summary.total}
+                  Total: {worker.credential_summary.total_count}
                 </Badge>
               </div>
 

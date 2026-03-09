@@ -1,3 +1,9 @@
+export type ComplianceStatus =
+  | "compliant"
+  | "warning"
+  | "non_compliant"
+  | "incomplete";
+
 export type WorkerProfile = {
   id: number;
   user_id: number;
@@ -5,6 +11,8 @@ export type WorkerProfile = {
   bio: string;
   years_experience: number;
   profile_visibility: boolean;
+  compliance_status: ComplianceStatus;
+  last_compliance_check: string | null;
   created_at: string;
 };
 
@@ -64,6 +72,8 @@ export type Reference = {
   phone: string;
   relationship: string;
   verified: boolean;
+  verification_sent_at: string | null;
+  verification_confirmed_at: string | null;
 };
 
 export type ReferencePayload = {
@@ -98,6 +108,35 @@ export type UploadCredentialPayload = {
   issue_date: string;
   expiration_date: string | null;
   file: File;
+};
+
+export type ComplianceSummary = {
+  valid_count: number;
+  expiring_count: number;
+  expired_count: number;
+  total_count: number;
+};
+
+export type ComplianceCredential = {
+  id: string;
+  credential_name: string;
+  credential_type: CredentialType;
+  issuing_organization: string;
+  expiration_date: string | null;
+  status: CredentialStatus;
+};
+
+export type WorkerCompliance = {
+  compliance_status: ComplianceStatus;
+  last_compliance_check: string | null;
+  credential_summary: ComplianceSummary;
+  expiring_credentials: ComplianceCredential[];
+  expired_credentials: ComplianceCredential[];
+};
+
+export type SendReferenceVerificationResponse = {
+  message: string;
+  verification_sent_at: string;
 };
 
 async function parseResponse<T>(response: Response): Promise<T> {
@@ -190,6 +229,16 @@ export async function getReferences(): Promise<Reference[]> {
   return parseResponse<Reference[]>(response);
 }
 
+export async function sendReferenceVerification(
+  id: number,
+): Promise<SendReferenceVerificationResponse> {
+  const response = await fetch(
+    `/api/worker/references/send-verification/${id}`,
+    { method: "POST" },
+  );
+  return parseResponse<SendReferenceVerificationResponse>(response);
+}
+
 export async function addReference(
   payload: ReferencePayload,
 ): Promise<Reference> {
@@ -211,6 +260,11 @@ export async function deleteReference(id: number): Promise<{ success: true }> {
 export async function getCredentials(): Promise<Credential[]> {
   const response = await fetch("/api/worker/credentials/", { cache: "no-store" });
   return parseResponse<Credential[]>(response);
+}
+
+export async function getWorkerCompliance(): Promise<WorkerCompliance> {
+  const response = await fetch("/api/worker/compliance", { cache: "no-store" });
+  return parseResponse<WorkerCompliance>(response);
 }
 
 export async function getCredential(id: string): Promise<Credential> {

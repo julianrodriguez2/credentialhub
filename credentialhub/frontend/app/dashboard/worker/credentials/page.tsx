@@ -90,6 +90,7 @@ export default function WorkerCredentialsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: workerQueryKeys.credentials });
+      queryClient.invalidateQueries({ queryKey: workerQueryKeys.compliance });
       setForm(defaultCredentialForm);
       setUploadProgress(0);
       if (fileInputRef.current) {
@@ -107,6 +108,7 @@ export default function WorkerCredentialsPage() {
     mutationFn: deleteCredential,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: workerQueryKeys.credentials });
+      queryClient.invalidateQueries({ queryKey: workerQueryKeys.compliance });
       toast.success("Credential deleted.");
     },
     onError: (error: Error) => {

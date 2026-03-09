@@ -6,14 +6,27 @@ from sqlalchemy.orm import Session
 from app.api.deps import require_roles
 from app.db.session import get_db
 from app.models.user import User, UserRole
+from app.schemas.compliance import (
+    ComplianceCredentialRead,
+    CredentialComplianceSummary,
+    WorkerComplianceRead,
+)
 from app.schemas.competency import CompetencyCreate, CompetencyRead
-from app.schemas.reference import ReferenceCreate, ReferenceRead
+from app.schemas.reference import (
+    ReferenceCreate,
+    ReferenceRead,
+    ReferenceVerificationSendResponse,
+)
 from app.schemas.work_experience import (
     WorkExperienceCreate,
     WorkExperienceRead,
     WorkExperienceUpdate,
 )
 from app.schemas.worker_profile import WorkerProfileRead, WorkerProfileUpdate
+from app.services.compliance_service import get_worker_compliance_snapshot
+from app.services.reference_verification_service import (
+    send_reference_verification_request,
+)
 from app.services.worker_service import (
     add_competency,
     add_reference,
@@ -28,6 +41,7 @@ from app.services.worker_service import (
     update_work_experience,
     update_worker_profile,
 )
+from app.utils.credential_status import get_credential_status
 
 router = APIRouter(prefix="/api/worker", tags=["worker"])
 
@@ -47,6 +61,42 @@ def put_profile(
     db: Session = Depends(get_db),
 ) -> WorkerProfileRead:
     return update_worker_profile(db, current_worker.id, payload)
+
+
+@router.get("/compliance", response_model=WorkerComplianceRead)
+def get_compliance(
+    current_worker: User = Depends(require_roles(UserRole.worker)),
+    db: Session = Depends(get_db),
+) -> WorkerComplianceRead:
+    snapshot = get_worker_compliance_snapshot(db, current_worker.id)
+
+    def serialize_credentials(
+        items: list,
+    ) -> list[ComplianceCredentialRead]:
+        return [
+            ComplianceCredentialRead(
+                id=item.id,
+                credential_name=item.credential_name,
+                credential_type=item.credential_type,
+                issuing_organization=item.issuing_organization,
+                expiration_date=item.expiration_date,
+                status=get_credential_status(item.expiration_date),
+            )
+            for item in items
+        ]
+
+    return WorkerComplianceRead(
+        compliance_status=snapshot.compliance_status,
+        last_compliance_check=snapshot.last_compliance_check,
+        credential_summary=CredentialComplianceSummary(
+            valid_count=snapshot.summary.valid_count,
+            expiring_count=snapshot.summary.expiring_count,
+            expired_count=snapshot.summary.expired_count,
+            total_count=snapshot.summary.total,
+        ),
+        expiring_credentials=serialize_credentials(snapshot.expiring_credentials),
+        expired_credentials=serialize_credentials(snapshot.expired_credentials),
+    )
 
 
 @router.post(
@@ -158,3 +208,35 @@ def remove_reference(
     if not deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Reference not found.")
     return {"success": True}
+
+
+@router.post(
+    "/references/send-verification/{reference_id}",
+    response_model=ReferenceVerificationSendResponse,
+)
+def send_reference_verification(
+    reference_id: int,
+    current_worker: User = Depends(require_roles(UserRole.worker)),
+    db: Session = Depends(get_db),
+) -> ReferenceVerificationSendResponse:
+    try:
+        reference = send_reference_verification_request(db, current_worker.id, reference_id)
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unable to send verification email.",
+        )
+
+    if reference is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Reference not found.")
+
+    if reference.verification_sent_at is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Verification status not updated.",
+        )
+
+    return ReferenceVerificationSendResponse(
+        message="Verification request sent successfully.",
+        verification_sent_at=reference.verification_sent_at,
+    )

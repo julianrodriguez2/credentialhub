@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
@@ -14,5 +16,18 @@ class ReferenceRead(ReferenceCreate):
     id: int
     worker_id: int
     verified: bool
+    verification_sent_at: datetime | None
+    verification_confirmed_at: datetime | None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class ReferenceVerificationSendResponse(BaseModel):
+    message: str
+    verification_sent_at: datetime
+
+
+class ReferenceVerificationConfirmResponse(BaseModel):
+    message: str
+    verified: bool
+    verification_confirmed_at: datetime
